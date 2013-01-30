@@ -9,6 +9,7 @@ MODULE_AUTHOR("Chris Long");
 static struct proc_dir_entry *proc_entry;
 
 int mymeminfo_read(char *page, char **start, off_t off, int count, int *eof, void *data);
+inline unsigned long kilobytes(unsigned long bytes);
 
 int init_mymeminfo_module(void)
 {
@@ -38,6 +39,11 @@ void cleanup_mymeminfo_module(void)
 int mymeminfo_read(char *page, char **start, off_t off, int count, int *eof, void *data)
 {
     return -1;
+}
+
+inline unsigned long kilobytes(unsigned long bytes)
+{
+    return bytes << (PAGE_SHIFT - 10);
 }
 
 module_init(init_mymeminfo_module);
