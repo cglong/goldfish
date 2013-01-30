@@ -28,6 +28,8 @@ int init_mymeminfo_module()
 
 void cleanup_mymeminfo_module()
 {
+    remove_proc_entry("mymeminfo", proc_entry);
+    printk(KERN_INFO "mymeminfo: Module unloaded.\n");
 }
 
 module_init(init_mymeminfo_module);
