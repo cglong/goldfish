@@ -10,7 +10,7 @@ static struct proc_dir_entry *proc_entry;
 
 int mymeminfo_read(char *page, char **start, off_t off, int count, int *eof, void *data);
 
-int init_mymeminfo_module()
+int init_mymeminfo_module(void)
 {
     int ret = 0;
     
@@ -29,7 +29,7 @@ int init_mymeminfo_module()
     return ret;
 }
 
-void cleanup_mymeminfo_module()
+void cleanup_mymeminfo_module(void)
 {
     remove_proc_entry("mymeminfo", proc_entry);
     printk(KERN_INFO "mymeminfo: Module unloaded.\n");
