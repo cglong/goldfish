@@ -58,8 +58,8 @@ int mymeminfo_read(char *page, char **start, off_t off, int count, int *eof, voi
     vmalloc_total = VMALLOC_END - VMALLOC_START;
     get_vmalloc_info(&vmi);
     
-    len = sprintf(page, "Total usable RAM: %lu KB\n", kilobytes(i.totalram));
-    len += sprintf(page+len, "Total free RAM: %lu KB\n", kilobytes(i.freeram));
+    len = sprintf(page, "Total usable RAM size: %lu KB\n", kilobytes(i.totalram));
+    len += sprintf(page+len, "Total free memory size: %lu KB\n", kilobytes(i.freeram));
     len += sprintf(page+len, "Cached memory size: %lu KB\n", kilobytes(cached));
     len += sprintf(page+len, "Page table size: %lu KB\n", kilobytes(global_page_state(NR_PAGETABLE)));
     len += sprintf(page+len, "Vmalloc total size: %lu KB\n", vmalloc_total >> 10);
