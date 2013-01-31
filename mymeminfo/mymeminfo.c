@@ -1,4 +1,5 @@
 #include <linux/kernel.h>
+#include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/proc_fs.h>
 
@@ -38,7 +39,13 @@ void cleanup_mymeminfo_module(void)
 
 int mymeminfo_read(char *page, char **start, off_t off, int count, int *eof, void *data)
 {
-    return -1;
+    struct sysinfo i;
+    int len;
+    
+    si_meminfo(&i);
+    
+    len = sprintf(page, "Total usable RAM: %lu KB\n", kilobytes(i.totalram));
+    return len;
 }
 
 inline unsigned long kilobytes(unsigned long bytes)
