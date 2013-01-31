@@ -46,6 +46,7 @@ int mymeminfo_read(char *page, char **start, off_t off, int count, int *eof, voi
     
     len = sprintf(page, "Total usable RAM: %lu KB\n", kilobytes(i.totalram));
     len += sprintf(page+len, "Total free RAM: %lu KB\n", kilobytes(i.freeram));
+    len += sprintf(page+len, "Page table size: %lu KB\n", kilobytes(global_page_state(NR_PAGETABLE)));
     
     return len;
 }
