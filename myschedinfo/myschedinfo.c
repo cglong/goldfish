@@ -7,6 +7,31 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Simplified scheduling info kernel module");
 MODULE_AUTHOR("Chris Long");
 
+#define SPLIT_NS(x) nsec_high(x), nsec_low(x)
+
+static long long nsec_high(unsigned long long nsec)
+{
+    if ((long long)nsec < 0)
+    {
+        nsec = -nsec;
+        do_div(nsec, 1000000);
+        return -nsec;
+    }
+    do_div(nsec, 1000000);
+    
+    return nsec;
+}
+
+static unsigned long nsec_low(unsigned long long nsec)
+{
+    if ((long long)nsec < 0)
+    {
+        nsec = -nsec;
+    }
+    
+    return do_div(nsec, 1000000);
+}
+
 static struct proc_dir_entry *proc_entry;
 long pid;
 
@@ -46,11 +71,11 @@ int myschedinfo_read(char *page, char **start, off_t off, int count, int *eof, v
     
     se = find_task_by_vpid(pid)->se;
     
-    len = sprintf(page, "exec_start: %lld\n", se.exec_start);
-    len += sprintf(page+len, "sum_exec_runtime: %lld\n", se.sum_exec_runtime);
-    len += sprintf(page+len, "vruntime: %lld\n", se.vruntime);
-    len += sprintf(page+len, "prev_sum_exec_runtime: %lld\n", se.prev_sum_exec_runtime);
-    len += sprintf(page+len, "last_wakeup: %lld\n", se.last_wakeup);
+    len = sprintf(page, "exec_start: %lld.%06ld\n", SPLIT_NS(se.exec_start));
+    len += sprintf(page+len, "sum_exec_runtime: %lld.%06ld\n", SPLIT_NS(se.sum_exec_runtime));
+    len += sprintf(page+len, "vruntime: %lld.%06ld\n", SPLIT_NS(se.vruntime));
+    len += sprintf(page+len, "prev_sum_exec_runtime: %lld.%06ld\n", SPLIT_NS(se.prev_sum_exec_runtime));
+    len += sprintf(page+len, "last_wakeup: %lld.%06ld\n", SPLIT_NS(se.last_wakeup));
     
     return len;
 }
