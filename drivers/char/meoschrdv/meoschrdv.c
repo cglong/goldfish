@@ -1,4 +1,6 @@
 #include <linux/module.h>
+#include <linux/fs.h>
+
 
 MODULE_LICENSE("GPL");
 
@@ -6,6 +8,40 @@ MODULE_LICENSE("GPL");
 
 static int debug_enable = 0;
 module_param(debug_enable, int, 0);
+
+struct file_operations meoschrdv_fops;
+
+static int meoschrdv_open(struct inode *inode, struct file *file)
+{
+  printk(KERN_INFO "Opened meoschrdv successfully.\n");
+  return 0;
+}
+
+static int meoschrdv_release(struct inode *inode, struct file *file)
+{
+  printk(KERN_INFO "Released meoschrdv successfully.\n");
+  return 0;
+}
+
+static ssize_t meoschrdv_read(struct file *file, char *buf, size_t count, loff_t *ptr)
+{
+  printk(KERN_INFO "Read %d bytes from %p.\n", count, buf);
+  return 0;
+}
+
+static ssize_t meoschrdv_write(struct file *file, const char *buf, size_t count, loff_t *ppos)
+{
+  printk(KERN_INFO "Write %d bytes to %p.\n", count, buf);
+  return 0;
+}
+
+struct file_operations meoschrdv_fops = {
+  .owner = THIS_MODULE,
+  .read = meoschrdv_read,
+  .write = meoschrdv_write,
+  .open = meoschrdv_open,
+  .release = meoschrdv_release,
+};
 
 
 static int __init meoschrdv_init(void)
