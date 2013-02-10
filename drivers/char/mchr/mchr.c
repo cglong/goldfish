@@ -3,7 +3,7 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 
-#include "meoschrdv.h"
+#include "mchr.h"
 
 MODULE_LICENSE("GPL");
 
