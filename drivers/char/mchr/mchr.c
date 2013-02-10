@@ -194,7 +194,8 @@ static int mchr_setup_device(struct mchr *pmydev, struct class *pclass, dev_t de
 
 static void mchr_cleanup(void)
 {
-  device_destroy(pmyclass, MKDEV(devno_major, MCHR_MINOR_BASE));
+  dev_t dev_no = MKDEV(devno_major, MCHR_MINOR_BASE);
+  device_destroy(pmyclass, dev_no);
   cdev_del(&mydev.cdev);
 
   if (pmyclass)
@@ -202,6 +203,8 @@ static void mchr_cleanup(void)
       class_destroy(pmyclass);
     }
   kfree(mydev.data);
+
+  unregister_chrdev_region(dev_no, 1);
   printk(KERN_INFO "Moes Char Device Driver Removed.\n");
   return;
 }
