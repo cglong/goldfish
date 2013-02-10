@@ -1112,6 +1112,12 @@ config DEVPORT
 	depends on ISA || PCI
 	default y
 
+config MEOSCHRDV
+       tristate "MEOS char device driver"
+       default m
+       help 
+         An example character device driver
+
 config DCC_TTY
 	tristate "DCC tty driver"
 	depends on ARM
