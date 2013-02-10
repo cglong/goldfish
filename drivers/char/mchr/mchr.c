@@ -2,6 +2,7 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
+#include <asm/uaccess.h>
 
 #include "mchr.h"
 
@@ -46,23 +47,113 @@ static int mchr_release(struct inode *inode, struct file *pfile)
   return 0;
 }
 
-static ssize_t mchr_read(struct file *file, char __user *buf, size_t count, loff_t *ptr)
+static ssize_t mchr_read(struct file *pfile, char __user *buf, size_t count, loff_t *ppos)
 {
-  printk(KERN_INFO "Read %d bytes from %p.\n", count, buf);
-  return 0;
+  struct mchr *pdev = (struct mchr *)pfile->private_data;
+  ssize_t retval = 0;
+  int i = 0;
+
+  if (*ppos >= pdev->bufsize)
+    {
+      return retval;
+    }
+
+  if (*ppos + count > pdev->bufsize)
+    {
+      count = pdev->bufsize - *ppos;
+    }
+
+  if (copy_to_user(buf, &(pdev->data[*ppos]), count) != 0)
+    {
+      return -EFAULT;
+    }
+
+  printk(KERN_INFO "*ppos: %lld\n", *ppos);
+  for (i = 0; i < count; i++)
+    {
+      //      printk(KERN_INFO "%c", pdev->data[*ppos + i]);
+    }
+  
+  *ppos += count;
+  retval = count;
+
+  printk(KERN_INFO "\nRead %d bytes from %p.\n", count, buf);
+  return retval;
 }
 
-static ssize_t mchr_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+static ssize_t mchr_write(struct file *pfile, const char __user *buf, size_t count, loff_t *ppos)
 {
-  printk(KERN_INFO "Write %d bytes to %p.\n", count, buf);
-  return 0;
+  struct mchr *pdev = (struct mchr *)pfile->private_data;
+  ssize_t retval = 0;
+  int i = 0;
+
+  if (*ppos >= pdev->bufsize)
+    {
+      return -EINVAL;
+      
+    }
+
+  if (*ppos + count > pdev->bufsize)
+    {
+      count = pdev->bufsize - *ppos;
+    }
+  
+  if (copy_from_user(&(pdev->data[*ppos]), buf, count) != 0)
+  {
+    return -EFAULT;
+  }
+
+  printk(KERN_INFO "*ppos: %lld\n", *ppos);
+  for (i = 0; i < count; i++)
+    {
+      //      printk(KERN_INFO "%c", pdev->data[*ppos + i]);
+    }
+  
+  *ppos += count;
+  retval = count;
+
+  printk(KERN_INFO "\nWrite %d bytes to %p.\n", count, buf);
+
+  return retval;
 }
+
+loff_t
+mchr_llseek(struct file *pfile, loff_t off, int whence)
+{
+  struct mchr *pdev = (struct mchr *)pfile->private_data;
+  loff_t newpos = 0;
+
+  printk(KERN_INFO "\nllseek off: %lld\n", off);
+  switch(whence) {
+  case 0: /* SEEK_SET */
+    newpos = off;
+    break;
+ 
+  case 1: /* SEEK_CUR */
+    newpos = pfile->f_pos + off;
+    break;
+ 
+  case 2: /* SEEK_END */
+    newpos = pdev->bufsize + off;
+    break;
+ 
+  default: /* can't happen */
+    return -EINVAL;
+  }
+  if (newpos < 0 || newpos > pdev->bufsize) 
+    return -EINVAL;
+     
+  pfile->f_pos = newpos;
+  return newpos;
+
+}  
 
 struct file_operations mchr_fops = {
   .owner = THIS_MODULE,
   .read = mchr_read,
   .write = mchr_write,
   .open = mchr_open,
+  .llseek = mchr_llseek,
   .release = mchr_release,
 };
 
