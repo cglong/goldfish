@@ -12,16 +12,35 @@ static int debug_enable = 0;
 module_param(debug_enable, int, 0);
 
 struct file_operations mchr_fops;
-static struct mchr pmydev;
+static struct mchr mydev;
 static struct class *pmyclass = NULL;
 static unsigned int devno_major = 0;
-static int mchr_open(struct inode *inode, struct file *file)
+static int mchr_open(struct inode *inode, struct file *pfile)
 {
+  if (devno_major != imajor(inode))
+    {
+      printk(KERN_WARNING "No device found with major=%d\n", devno_major);
+      return -ENODEV;
+    }
+
+  pfile->private_data = &mydev;
+
+  if (mydev.data == NULL)
+    {
+      mydev.data = (unsigned char*)kzalloc(mydev.bufsize, GFP_KERNEL);
+      if (mydev.data == NULL)
+	{
+	  printk(KERN_WARNING "open(): out of memory\n");
+	  return -ENOMEM;
+	}
+    }
+
   printk(KERN_INFO "Opened mchr successfully.\n");
+
   return 0;
 }
 
-static int mchr_release(struct inode *inode, struct file *file)
+static int mchr_release(struct inode *inode, struct file *pfile)
 {
   printk(KERN_INFO "Released mchr successfully.\n");
   return 0;
@@ -54,7 +73,7 @@ static int mchr_setup_device(struct mchr *pmydev, struct class *pclass, dev_t de
   struct device *device = NULL;
 
   pmydev->data = NULL;
-  pmydev->buffer = MCHR_BUFSIZE;
+  pmydev->bufsize = MCHR_BUFSIZE;
   
 
   cdev_init(&pmydev->cdev, &mchr_fops);
@@ -85,13 +104,13 @@ static int mchr_setup_device(struct mchr *pmydev, struct class *pclass, dev_t de
 static void mchr_cleanup(void)
 {
   device_destroy(pmyclass, MKDEV(devno_major, MCHR_MINOR_BASE));
-  cdev_del(&pmydev.cdev);
+  cdev_del(&mydev.cdev);
 
   if (pmyclass)
     {
       class_destroy(pmyclass);
     }
-
+  kfree(mydev.data);
   printk(KERN_INFO "Moes Char Device Driver Removed.\n");
   return;
 }
@@ -120,7 +139,7 @@ static int __init mchr_init(void)
     return PTR_ERR(pmyclass);
 
   // Set up the device
-  err = mchr_setup_device(&pmydev, pmyclass, dev_no);
+  err = mchr_setup_device(&mydev, pmyclass, dev_no);
 
   if (err != 0)
     {
