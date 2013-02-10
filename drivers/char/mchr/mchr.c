@@ -53,6 +53,10 @@ static int mchr_setup_device(struct mchr *pmydev, struct class *pclass, dev_t de
   int err = 0;
   struct device *device = NULL;
 
+  pmydev->data = NULL;
+  pmydev->buffer = MCHR_BUFSIZE;
+  
+
   cdev_init(&pmydev->cdev, &mchr_fops);
   pmydev->cdev.owner = THIS_MODULE;
   pmydev->cdev.ops = &mchr_fops;
@@ -76,6 +80,20 @@ static int mchr_setup_device(struct mchr *pmydev, struct class *pclass, dev_t de
     return err;
   }
   return err;
+}
+
+static void mchr_cleanup(void)
+{
+  device_destroy(pmyclass, MKDEV(devno_major, MCHR_MINOR_BASE));
+  cdev_del(&pmydev.cdev);
+
+  if (pmyclass)
+    {
+      class_destroy(pmyclass);
+    }
+
+  printk(KERN_INFO "Moes Char Device Driver Removed.\n");
+  return;
 }
 
 static int __init mchr_init(void)
@@ -107,6 +125,7 @@ static int __init mchr_init(void)
   if (err != 0)
     {
       printk(KERN_ERR "Device setup failed.\n");
+      mchr_cleanup();
       return err;
     }
   return 0;
@@ -115,15 +134,7 @@ static int __init mchr_init(void)
 
 static void __exit mchr_exit(void)
 {
-  device_destroy(pmyclass, MKDEV(devno_major, MCHR_MINOR_BASE));
-  cdev_del(&pmydev.cdev);
-
-  if (pmyclass)
-    {
-      class_destroy(pmyclass);
-    }
-
-  printk(KERN_INFO "Moes Char Device Driver Removed.\n");
+  mchr_cleanup();
   return;
 }
 
