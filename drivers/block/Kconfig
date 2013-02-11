@@ -446,4 +446,10 @@ config BLK_DEV_HD
 
 	  If unsure, say N.
 
+config MBLK
+    tristate "RAM-based block driver"
+    default m
+    help
+      Block device driver using RAM
+
 endif # BLK_DEV
