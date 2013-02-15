@@ -56,13 +56,18 @@ static void mblk_transfer(struct mblk_dev *dev, unsigned long sector, unsigned l
 		printk(KERN_NOTICE "mblk: Beyond-end write (%ld %ld)\n", offset, nbytes);
 		return;
 	}
+	
 	if (write)
 	{
 		memcpy(dev->data + offset, buffer, nbytes);
+		dev->stat->total_write_ops += 1;
+		dev->stat->total_write_size += nbytes;
 	}
 	else
 	{
 		memcpy(buffer, dev->data + offset, nbytes);
+		dev->stat->total_read_ops += 1;
+		dev->stat->total_read_size += nbytes;
 	}
 }
 
