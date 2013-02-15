@@ -132,6 +132,7 @@ static void setup_device(struct mblk_dev *dev, int which)
 	dev->gd->private_data = dev;
 	snprintf(dev->gd->disk_name, 32, "mblk%i", which);
 	set_capacity(dev->gd, NSECTORS);
+	add_disk(dev->gd);
 }
 
 static int __init mblk_init(void)
