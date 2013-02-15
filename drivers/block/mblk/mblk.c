@@ -1,11 +1,31 @@
 #include <linux/fs.h>
 #include <linux/module.h>
+#include <linux/vmalloc.h>
 
 MODULE_LICENSE("GPL");
+
+struct mblk_dev
+{
+    int size;
+    u8 *data;
+    spinlock_t lock;
+};
 
 static int major_number = 0;
 static int device_num = 1;
 module_param(device_num, int, 0);
+
+static void setup_device(struct mblk_dev *dev, int which)
+{
+    memset(dev, 0, sizeof(struct mblk_dev));
+    dev->size = 1024 * 512;
+    dev->data = vmalloc(dev->size);
+    if (dev->data == NULL)
+    {
+        printk(KERN_NOTICE "mblk: Vmalloc failure\n");
+        return;
+    }
+}
 
 static int __init mblk_init(void)
 {
