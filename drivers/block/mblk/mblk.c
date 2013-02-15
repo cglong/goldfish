@@ -34,10 +34,11 @@ static struct block_device_operations mblk_ops =
 	.owner = THIS_MODULE,
 };
 
+#define NSECTORS 1024
+
 static int major_number = 0;
 static int device_num = 1;
 module_param(device_num, int, 0);
-static int nsectors = 1024;
 
 static void mblk_request(struct request_queue_t *q)
 {
@@ -46,7 +47,7 @@ static void mblk_request(struct request_queue_t *q)
 static void setup_device(struct mblk_dev *dev, int which)
 {
     memset(dev, 0, sizeof(struct mblk_dev));
-    dev->size = nsectors * 512;
+    dev->size = NSECTORS * 512;
     dev->data = vmalloc(dev->size);
     if (dev->data == NULL)
     {
@@ -74,7 +75,7 @@ static void setup_device(struct mblk_dev *dev, int which)
 	dev->gd->queue = dev->queue;
 	dev->gd->private_data = dev;
 	snprintf(dev->gd->disk_name, 32, "mblk%i", which);
-	set_capacity(dev->gd, nsectors);
+	set_capacity(dev->gd, NSECTORS);
 }
 
 static int __init mblk_init(void)
