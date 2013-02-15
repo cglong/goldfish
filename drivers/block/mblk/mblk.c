@@ -22,6 +22,7 @@ static int __init mblk_init(void)
 
 static void __exit mblk_exit(void)
 {
+    unregister_blkdev(major_number, "mblk");
     printk(KERN_INFO "mblk: Driver unloaded.\n");
 }
 
