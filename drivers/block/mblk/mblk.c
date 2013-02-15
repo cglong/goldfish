@@ -29,6 +29,7 @@ struct mblk_stat
 #define KERNEL_SECTOR_SIZE 512
 #define IOCTL_GET_STATISTICS 48
 
+static struct mblk_dev *Devices = NULL;
 static int major_number = 0;
 static int device_num = 1;
 module_param(device_num, int, 0);
@@ -135,12 +136,26 @@ static void setup_device(struct mblk_dev *dev, int which)
 
 static int __init mblk_init(void)
 {
+	int i;
+	
     major_number = register_blkdev(major_number, "mblk");
     if (major_number <= 0)
     {
         printk(KERN_WARNING "mblk: Unable to get major number\n");
         return -EBUSY;
     }
+    
+    Devices = kmalloc(device_num * sizeof(struct mblk_dev), GFP_KERNEL);
+    if (Devices == NULL)
+    {
+		unregister_blkdev(major_number, "mblk");
+		return -ENOMEM;
+	}
+	
+	for (i = 0; i < device_num; i++)
+	{
+		setup_device(Devices + i, i);
+	}
     
     printk(KERN_INFO "mblk: Driver loaded.\n");
     return 0;
