@@ -24,17 +24,22 @@ struct mblk_dev
 {
     int size;
     u8 *data;
+    struct mblk_stat *stat;
     spinlock_t lock;
     struct request_queue *queue;
     struct gendisk *gd;
 };
 
-static struct block_device_operations mblk_ops =
+struct mblk_stat
 {
-	.owner = THIS_MODULE,
+	unsigned total_read_ops;
+	unsigned total_write_ops;
+	unsigned total_read_size;  // in bytes
+	unsigned total_write_size; // in bytes
 };
 
 #define NSECTORS 1024
+#define IOCTL_GET_STATISTICS 48
 
 static int major_number = 0;
 static int device_num = 1;
@@ -43,6 +48,29 @@ module_param(device_num, int, 0);
 static void mblk_request(struct request_queue_t *q)
 {
 }
+
+int mblk_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
+{
+	struct mblk_dev *dev = filp->private_data;
+	struct mblk_stat *stat = dev->stat;
+	
+	switch (cmd)
+	{
+		case IOCTL_GET_STATISTICS:
+			if (copy_to_user((void __user *)arg, stat, sizeof(*stat)))
+			{
+				return -EFAULT;
+			}
+			return 0;
+	}
+	return -ENOTTY;
+}
+
+static struct block_device_operations mblk_ops =
+{
+	.owner = THIS_MODULE,
+	.ioctl = mblk_ioctl,
+};
 
 static void setup_device(struct mblk_dev *dev, int which)
 {
