@@ -39,14 +39,49 @@ struct mblk_stat
 };
 
 #define NSECTORS 1024
+#define KERNEL_SECTOR_SIZE 512
 #define IOCTL_GET_STATISTICS 48
 
 static int major_number = 0;
 static int device_num = 1;
 module_param(device_num, int, 0);
 
+static void mblk_transfer(struct mblk_dev *dev, unsigned long sector, unsigned long nsect, char *buffer, int write)
+{
+	unsigned long offset = sector * KERNEL_SECTOR_SIZE;
+	unsigned long nbytes = nsect * KERNEL_SECTOR_SIZE;
+	
+	if ((offset + nbytes) > dev->size)
+	{
+		printk(KERN_NOTICE "mblk: Beyond-end write (%ld %ld)\n", offset, nbytes);
+		return;
+	}
+	if (write)
+	{
+		memcpy(dev->data + offset, buffer, nbytes);
+	}
+	else
+	{
+		memcpy(buffer, dev->data + offset, nbytes);
+	}
+}
+
 static void mblk_request(struct request_queue_t *q)
 {
+	struct request *req;
+	
+	while ((req = elv_next_request(q)) != NULL)
+	{
+		struct mblk_dev *dev = req->rq_disk->private_data;
+		if (!blk_fs_request(req))
+		{
+			printk(KERN_NOTICE "mblk: Skip non-fs request\n");
+			end_request(req, 0);
+			continue;
+		}
+		mblk_transfer(dev, req->sector, req->current_nr_sectors, req->buffer, rq_data_dir(req));
+		end_request(req, 1);
+	}
 }
 
 int mblk_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
@@ -75,7 +110,7 @@ static struct block_device_operations mblk_ops =
 static void setup_device(struct mblk_dev *dev, int which)
 {
     memset(dev, 0, sizeof(struct mblk_dev));
-    dev->size = NSECTORS * 512;
+    dev->size = NSECTORS * KERNEL_SECTOR_SIZE;
     dev->data = vmalloc(dev->size);
     if (dev->data == NULL)
     {
