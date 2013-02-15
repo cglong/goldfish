@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
   printf("%s: entered\n", argv[0]);
 
-  fd = open("/dev/mblk", O_RDWR);
+  fd = open("/dev/block/mblk0", O_RDWR);
   if (fd == -1) {
     perror("open failed.\n");
     count = fd;
