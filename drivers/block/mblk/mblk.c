@@ -1,21 +1,8 @@
-#include <linux/bio.h>
 #include <linux/blkdev.h>
-#include <linux/buffer_head.h>
-#include <linux/errno.h>
-#include <linux/fcntl.h>
 #include <linux/fs.h>
-#include <linux/genhd.h>
-#include <linux/hdreg.h>
-#include <linux/init.h>
 #include <linux/ioctl.h>
-#include <linux/kdev_t.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/moduleparam.h>
-#include <linux/sched.h>
-#include <linux/slab.h>
-#include <linux/timer.h>
-#include <linux/types.h>
 #include <linux/vmalloc.h>
 
 MODULE_LICENSE("GPL");
