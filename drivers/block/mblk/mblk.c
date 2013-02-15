@@ -66,7 +66,7 @@ static void mblk_transfer(struct mblk_dev *dev, unsigned long sector, unsigned l
 	}
 }
 
-static void mblk_request(struct request_queue_t *q)
+static void mblk_request(struct request_queue *q)
 {
 	struct request *req;
 	
