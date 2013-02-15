@@ -1,12 +1,21 @@
+#include <linux/fs.h>
 #include <linux/module.h>
 
 MODULE_LICENSE("GPL");
 
+static int major_number = 0;
 static int device_num = 1;
 module_param(device_num, int, 0);
 
 static int __init mblk_init(void)
 {
+    major_number = register_blkdev(major_number, "mblk");
+    if (major_number <= 0)
+    {
+        printk(KERN_WARNING "mblk: Unable to get major number\n");
+        return -EBUSY;
+    }
+    
     printk(KERN_INFO "mblk: Driver loaded.\n");
     return 0;
 }
