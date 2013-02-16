@@ -5,6 +5,15 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+struct mklb_stat
+{
+	unsigned total_read_ops;
+	unsigned total_write_ops;
+	unsigned total_read_size;  // in bytes
+	unsigned total_write_size; // in bytes
+};
+
+#define IOCTL_GET_STATISTICS 48
 #define BUF_SIZE 100
 
 int main(int argc, char *argv[])
@@ -75,6 +84,15 @@ int main(int argc, char *argv[])
     {
       printf("Comparison Success.\n");
     }
+  
+  struct mklb_stat mblk;
+  ioctl(fd, IOCTL_GET_STATISTICS, &mblk);
+  
+  printf("Read ops: %d\n", mblk.total_read_ops);
+  printf("Write ops: %d\n", mblk.total_write_ops);
+  printf("Read size: %d\n", mblk.total_read_size);
+  printf("Write size: %d\n", mblk.total_write_ops);
+  
   close(fd);
 
   return 0;
