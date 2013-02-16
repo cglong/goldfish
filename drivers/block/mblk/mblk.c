@@ -164,6 +164,29 @@ static int __init mblk_init(void)
 
 static void __exit mblk_exit(void)
 {
+	int i;
+	for (i = 0; i < device_num; i++)
+	{
+		struct mblk_dev *dev = Devices + i;
+		
+		if (dev->gd)
+		{
+			del_gendisk(dev->gd);
+			put_disk(dev->gd);
+		}
+		
+		if (dev->queue)
+		{
+			blk_cleanup_queue(dev->queue);
+		}
+		
+		if (dev->data)
+		{
+			vfree(dev->data);
+		}
+	}
+	kfree(Devices);
+	
     unregister_blkdev(major_number, "mblk");
     printk(KERN_INFO "mblk: Driver unloaded.\n");
 }
