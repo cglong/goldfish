@@ -7,22 +7,22 @@
 
 MODULE_LICENSE("GPL");
 
-struct mblk_dev
-{
-    int size;
-    u8 *data;
-    struct mblk_stat *stat;
-    spinlock_t lock;
-    struct request_queue *queue;
-    struct gendisk *gd;
-};
-
 struct mblk_stat
 {
 	unsigned total_read_ops;
 	unsigned total_write_ops;
 	unsigned total_read_size;  // in bytes
 	unsigned total_write_size; // in bytes
+};
+
+struct mblk_dev
+{
+    int size;
+    u8 *data;
+    struct mblk_stat stat;
+    spinlock_t lock;
+    struct request_queue *queue;
+    struct gendisk *gd;
 };
 
 #define NSECTORS 1024
@@ -48,14 +48,14 @@ static void mblk_transfer(struct mblk_dev *dev, unsigned long sector, unsigned l
 	if (write)
 	{
 		memcpy(dev->data + offset, buffer, nbytes);
-		dev->stat->total_write_ops += 1;
-		dev->stat->total_write_size += nbytes;
+		dev->stat.total_write_ops += 1;
+		dev->stat.total_write_size += nbytes;
 	}
 	else
 	{
 		memcpy(buffer, dev->data + offset, nbytes);
-		dev->stat->total_read_ops += 1;
-		dev->stat->total_read_size += nbytes;
+		dev->stat.total_read_ops += 1;
+		dev->stat.total_read_size += nbytes;
 	}
 }
 
@@ -80,12 +80,12 @@ static void mblk_request(struct request_queue *q)
 int mblk_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	struct mblk_dev *dev = filp->private_data;
-	struct mblk_stat *stat = dev->stat;
+	struct mblk_stat stat = dev->stat;
 	
 	switch (cmd)
 	{
 		case IOCTL_GET_STATISTICS:
-			if (copy_to_user((void __user *)arg, stat, sizeof(*stat)))
+			if (copy_to_user((void __user *)arg, &stat, sizeof(stat)))
 			{
 				return -EFAULT;
 			}
