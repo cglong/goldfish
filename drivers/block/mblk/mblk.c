@@ -77,9 +77,9 @@ static void mblk_request(struct request_queue *q)
 	}
 }
 
-int mblk_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
+int mblk_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd, unsigned long arg)
 {
-	struct mblk_dev *dev = filp->private_data;
+	struct mblk_dev *dev = bdev->bd_disk->private_data;
 	struct mblk_stat stat = dev->stat;
 	
 	switch (cmd)
@@ -113,6 +113,11 @@ static void setup_device(struct mblk_dev *dev, int which)
     spin_lock_init(&dev->lock);
     
     dev->queue = blk_init_queue(mblk_request, &dev->lock);
+    
+    dev->stat.total_read_ops = 0;
+    dev->stat.total_write_ops = 0;
+    dev->stat.total_read_size = 0;
+    dev->stat.total_write_size = 0;
     
     dev->gd = alloc_disk(1);
     if (!dev->gd)
